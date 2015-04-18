@@ -1,154 +1,116 @@
 from PyQt4 import QtCore, QtGui
-from ControlPanel_ui import Ui_Form
+from movementWindow_ui import Ui_MainWindow
 from InstsAndQt.MotorDriver import *
 from InstsAndQt.customQt import *
+from Control import SettingsWindow
 import pyqtgraph
 
 
 
-class SettingsWindow(QtGui.QWidget):
+class MotorWindow(QtGui.QMainWindow):
     # emit a list of values to update the voltages/currents of the coils
-    sigUpdatePowers = QtCore.pyqtSignal(object)
-    thMonitorVoltage = None
-    doLoops = True
+    thMoveMotor = None
 
     mutex = QtCore.QMutex()
 
     def __init__(self, device = None, parent = None):
-        super(SettingsWindow, self).__init__(parent)
+        super(MotorWindow, self).__init__(parent)
         self.device = TIMS0201()
         self.device.open_()
         self.initUI()
-        self.thMonitorVoltage = TempThread(target = self.monitorVoltageLoop)
-        self.thMonitorVoltage.start()
-        self.sigUpdatePowers.connect(self.updateVoltages)
+        self.currentAngle = 0
+        self.currentLimit = self.device.getCurrentLimit()
+        self.device.setCurrentLimit(0)
+        self.settingsWindow = None
+
 
     def initUI(self):
-        self.ui = Ui_Form()
+        self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        # self.ui.sbCurrent.setInputMask("09")
-        # self.ui.sbCurrent.editingFinished.connect(self.updateCurrent)
-        # self.ui.sbCurrent.setSuffix("%")
-        self.ui.sbCurrent.setOpts(int = True, step=1, bounds = (0, 100))
-        self.ui.sbCurrent.sigValueChanged.connect(self.updateCurrent)
-        self.ui.slideCurrent.valueChanged.connect(self.updateCurrent)
+
+        self.buttons = [
+            self.ui.bm01,
+            self.ui.bm05,
+            self.ui.bm10,
+            self.ui.bp01,
+            self.ui.bp05,
+            self.ui.bp10,
+            self.ui.bGo
+        ]
+        for button in self.buttons:
+            button.clicked.connect(self.moveMotorDeg)
+
+        self.ui.sbAngle.setOpts(bounds = (-360, 360), decimals = 1, step = 0.1)
+        self.ui.bStop.clicked.connect(self.stopMove)
+
+        self.ui.mMoreSettings.triggered.connect(self.launchSettings)
 
 
-        self.ui.sbStepRate.setOpts(int = True, step=1, bounds = (0, 700))
-        self.ui.sbStepRate.sigValueChanged.connect(self.updateStepRate)
-        self.ui.slideStepRate.valueChanged.connect(self.updateStepRate)
 
-        current = self.device.getCurrentLimit()
-        self.ui.sbCurrent.setValue(current)
 
-        stepRate = self.device.getStepRate()
-        self.ui.sbStepRate.setValue(stepRate)
-
-        self.ui.bOK.clicked.connect(self.close)
 
         self.show()
 
-    def updateCurrent(self):
+    def moveMotorDeg(self):
         sent = self.sender()
-        if sent == self.ui.sbCurrent:
-            newVal = sent.interpret()
-            if newVal > 20:
-                newVal = 20
-                sent.blockSignals(True)
-                sent.setValue(newVal)
-                sent.blockSignals(False)
-            # prevent infinite recursions
-            self.ui.slideCurrent.blockSignals(True)
-            self.ui.slideCurrent.setValue(newVal)
-            self.ui.slideCurrent.blockSignals(False)
+        moveBy = 0
+        if sent in self.buttons[:-1]:
+            moveBy = int(sent.text()[:-1])
         else:
-            newVal = sent.value()
-            if newVal > 20:
-                newVal = 20
-                sent.blockSignals(True)
-                sent.setValue(newVal)
-                sent.blockSignals(False)
-            self.ui.sbCurrent.blockSignals(True)
-            self.ui.sbCurrent.setValue(newVal)
-            self.ui.sbCurrent.blockSignals(False)
+            moveBy = self.ui.sbAngle.interpret() - self.currentAngle
+        print moveBy
 
+
+        for button in self.buttons:
+            button.setEnabled(False)
+
+        if self.settingsWindow is not None:
+            self.currentLimit = self.settingsWindow.ui.sbCurrent.interpret()
+        self.device.setCurrentLimit(self.currentLimit)
+        self.device.moveRelative(moveBy * 400)
+        self.thMoveMotor = TempThread(target = self.waitForMotor)
+        # self.thMoveMotor.terminated.connect(self.finishedMove)
+        self.thMoveMotor.start()
+
+
+    def stopMove(self):
+        try:
+            # self.thMoveMotor.terminate()
+            self.device.stopMotor()
+        except Exception as e:
+            print e
+
+    def launchSettings(self):
+        self.device.setCurrentLimit(self.currentLimit)
+        self.settingsWindow = SettingsWindow(device = self.device, parent = self)
+
+
+
+
+    def waitForMotor(self):
         self.mutex.lock()
-        self.device.setCurrentLimit(newVal)
-
-
-        # update them in case something went wrong and wasn't actually udpated
-        newVal = self.device.getCurrentLimit()
-        self.mutex.unlock()
-        self.ui.slideCurrent.blockSignals(True)
-        self.ui.slideCurrent.setValue(newVal)
-        self.ui.slideCurrent.blockSignals(False)
-        self.ui.sbCurrent.blockSignals(True)
-        self.ui.sbCurrent.setValue(newVal)
-        self.ui.sbCurrent.blockSignals(False)
-
-    def updateStepRate(self):
-        sent = self.sender()
-        if sent == self.ui.sbStepRate:
-            newVal = sent.interpret()
-            # if newVal > 20:
-            #     newVal = 20
-            #     sent.blockSignals(True)
-            #     sent.setValue(newVal)
-            #     sent.blockSignals(False)
-            # prevent infinite recursions
-            self.ui.slideStepRate.blockSignals(True)
-            self.ui.slideStepRate.setValue(newVal)
-            self.ui.slideStepRate.blockSignals(False)
-        else:
-            newVal = sent.value()
-            # if newVal > 20:
-            #     newVal = 20
-            #     sent.blockSignals(True)
-            #     sent.setValue(newVal)
-            #     sent.blockSignals(False)
-            self.ui.sbStepRate.blockSignals(True)
-            self.ui.sbStepRate.setValue(newVal)
-            self.ui.sbStepRate.blockSignals(False)
-
-        self.mutex.lock()
-        self.device.setStepRate(newVal)
-
-
-        # update them in case something went wrong and wasn't actually udpated
-        newVal = self.device.getStepRate()
-        self.mutex.unlock()
-        self.ui.slideStepRate.blockSignals(True)
-        self.ui.slideStepRate.setValue(newVal)
-        self.ui.slideStepRate.blockSignals(False)
-        self.ui.sbStepRate.blockSignals(True)
-        self.ui.sbStepRate.setValue(newVal)
-        self.ui.sbStepRate.blockSignals(False)
-
-    def monitorVoltageLoop(self):
-        while self.doLoops:
-            self.mutex.lock()
-            self.sigUpdatePowers.emit(self.device.getMotorPowers())
+        while self.device.isBusy():
             self.mutex.unlock()
-            time.sleep(100./1000.)
+            time.sleep(0.4)
+            self.mutex.lock()
+        self.finishedMove()
+        self.mutex.unlock()
 
-    def updateVoltages(self, values):
-        # print "\tvalues = {}".format(values)
-        if values is None:
-            return
-        self.ui.tVoltage.setText("{:.3f}".format(values[0]))
-        self.ui.tWA.setText("{:.5f}".format(values[1]))
-        self.ui.tWB.setText("{:.5f}".format(values[2]))
+    def finishedMove(self):
+        for button in self.buttons:
+            button.setEnabled(True)
+        # Stop it from whining when not moving
+        self.device.setCurrentLimit(0)
+
+
+
+
 
 
 
     def closeEvent(self, QCloseEvent):
         if self.parent() == None:
             self.device.close_()
-        self.doLoops = False
-        try:
-            self.thMonitorVoltage.wait()
-        except:
-            pass
         QCloseEvent.accept()
 
 
@@ -164,5 +126,5 @@ class SettingsWindow(QtGui.QWidget):
 if __name__ == "__main__":
     import sys
     e = QtGui.QApplication(sys.argv)
-    win = SettingsWindow(device = TIMS0201(), parent = None)
+    win = MotorWindow(device = TIMS0201(), parent = None)
     sys.exit(e.exec_())

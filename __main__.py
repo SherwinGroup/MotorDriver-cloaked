@@ -6,22 +6,27 @@ from Control import SettingsWindow
 import pyqtgraph
 
 
-
 class MotorWindow(QtGui.QMainWindow):
     # emit a list of values to update the voltages/currents of the coils
     thMoveMotor = None
+    sigUpdateDegrees = QtCore.pyqtSignal(object)
 
-    mutex = QtCore.QMutex()
 
     def __init__(self, device = None, parent = None):
         super(MotorWindow, self).__init__(parent)
+        self.stepsPerDeg = 100
         self.device = TIMS0201()
         self.device.open_()
         self.initUI()
-        self.currentAngle = 0
+        self.currentAngle = self.device.getSteps()/self.stepsPerDeg
         self.currentLimit = self.device.getCurrentLimit()
+        if self.currentLimit == 0:
+            self.currentLimit = 9
         self.device.setCurrentLimit(0)
         self.settingsWindow = None
+        self.sigUpdateDegrees.connect(self.setDegrees)
+
+        self.finishedMove()
 
 
     def initUI(self):
@@ -44,10 +49,9 @@ class MotorWindow(QtGui.QMainWindow):
         self.ui.bStop.clicked.connect(self.stopMove)
 
         self.ui.mMoreSettings.triggered.connect(self.launchSettings)
+        self.ui.mMoreZero.triggered.connect(self.zeroDegrees)
 
-
-
-
+        self.ui.bQuit.clicked.connect(self.close)
 
         self.show()
 
@@ -66,8 +70,9 @@ class MotorWindow(QtGui.QMainWindow):
 
         if self.settingsWindow is not None:
             self.currentLimit = self.settingsWindow.ui.sbCurrent.interpret()
+
         self.device.setCurrentLimit(self.currentLimit)
-        self.device.moveRelative(moveBy * 400)
+        self.device.moveRelative(moveBy * self.stepsPerDeg)
         self.thMoveMotor = TempThread(target = self.waitForMotor)
         # self.thMoveMotor.terminated.connect(self.finishedMove)
         self.thMoveMotor.start()
@@ -75,7 +80,6 @@ class MotorWindow(QtGui.QMainWindow):
 
     def stopMove(self):
         try:
-            # self.thMoveMotor.terminate()
             self.device.stopMotor()
         except Exception as e:
             print e
@@ -85,22 +89,32 @@ class MotorWindow(QtGui.QMainWindow):
         self.settingsWindow = SettingsWindow(device = self.device, parent = self)
 
 
+    def zeroDegrees(self):
+        val = self.ui.sbAngle.interpret()
+        self.device.setSteps(val * self.stepsPerDeg)
+        self.finishedMove()
+
 
 
     def waitForMotor(self):
-        self.mutex.lock()
-        while self.device.isBusy():
-            self.mutex.unlock()
+        flg = self.device.isBusy()
+        while flg:
             time.sleep(0.4)
-            self.mutex.lock()
+            flg = self.device.isBusy()
         self.finishedMove()
-        self.mutex.unlock()
 
     def finishedMove(self):
         for button in self.buttons:
             button.setEnabled(True)
         # Stop it from whining when not moving
         self.device.setCurrentLimit(0)
+
+        curSteps = self.device.getSteps()
+        self.sigUpdateDegrees.emit(curSteps/self.stepsPerDeg)
+
+    def setDegrees(self, val):
+        self.ui.sbAngle.setValue(val)
+        self.currentAngle = val
 
 
 
@@ -109,7 +123,9 @@ class MotorWindow(QtGui.QMainWindow):
 
 
     def closeEvent(self, QCloseEvent):
-        if self.parent() == None:
+        if self.settingsWindow is not None:
+            self.settingsWindow.close()
+        if self.parent() is None:
             self.device.close_()
         QCloseEvent.accept()
 

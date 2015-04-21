@@ -23,8 +23,6 @@ class SettingsWindow(QtGui.QWidget):
             self.device.open_()
 
         self.mainParentWindow = parent
-        if parent is not None:
-            self.mutex = parent.mutex
 
         self.initUI()
         self.thMonitorVoltage = TempThread(target = self.monitorVoltageLoop)
@@ -81,13 +79,11 @@ class SettingsWindow(QtGui.QWidget):
             self.ui.sbCurrent.setValue(newVal)
             self.ui.sbCurrent.blockSignals(False)
 
-        self.mutex.lock()
         self.device.setCurrentLimit(newVal)
 
 
         # update them in case something went wrong and wasn't actually udpated
         newVal = self.device.getCurrentLimit()
-        self.mutex.unlock()
         self.ui.slideCurrent.blockSignals(True)
         self.ui.slideCurrent.setValue(newVal)
         self.ui.slideCurrent.blockSignals(False)
@@ -119,13 +115,11 @@ class SettingsWindow(QtGui.QWidget):
             self.ui.sbStepRate.setValue(newVal)
             self.ui.sbStepRate.blockSignals(False)
 
-        self.mutex.lock()
         self.device.setStepRate(newVal)
 
 
         # update them in case something went wrong and wasn't actually udpated
         newVal = self.device.getStepRate()
-        self.mutex.unlock()
         self.ui.slideStepRate.blockSignals(True)
         self.ui.slideStepRate.setValue(newVal)
         self.ui.slideStepRate.blockSignals(False)
@@ -135,9 +129,7 @@ class SettingsWindow(QtGui.QWidget):
 
     def monitorVoltageLoop(self):
         while self.doLoops:
-            self.mutex.lock()
             self.sigUpdatePowers.emit(self.device.getMotorPowers())
-            self.mutex.unlock()
             time.sleep(100./1000.)
 
     def updateVoltages(self, values):

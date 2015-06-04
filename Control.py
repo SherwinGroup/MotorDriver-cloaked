@@ -59,8 +59,8 @@ class SettingsWindow(QtGui.QWidget):
         sent = self.sender()
         if sent == self.ui.sbCurrent:
             newVal = sent.interpret()
-            if newVal > 20:
-                newVal = 20
+            if newVal > 35:
+                newVal = 35
                 sent.blockSignals(True)
                 sent.setValue(newVal)
                 sent.blockSignals(False)
@@ -70,8 +70,8 @@ class SettingsWindow(QtGui.QWidget):
             self.ui.slideCurrent.blockSignals(False)
         else:
             newVal = sent.value()
-            if newVal > 20:
-                newVal = 20
+            if newVal > 35:
+                newVal = 35
                 sent.blockSignals(True)
                 sent.setValue(newVal)
                 sent.blockSignals(False)

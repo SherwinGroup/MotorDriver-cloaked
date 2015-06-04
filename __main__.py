@@ -73,8 +73,6 @@ class MotorWindow(QtGui.QMainWindow):
             self.currentLimit = self.settingsWindow.ui.sbCurrent.interpret()
 
         self.device.setCurrentLimit(self.currentLimit)
-        print "set current limit", self.device.getCurrentLimit()
-        print "telling to move", moveBy * self.stepsPerDeg
         self.device.moveRelative(moveBy * self.stepsPerDeg)
         self.thMoveMotor = TempThread(target = self.waitForMotor)
         # self.thMoveMotor.terminated.connect(self.finishedMove)
@@ -115,7 +113,6 @@ class MotorWindow(QtGui.QMainWindow):
         self.device.setCurrentLimit(0)
 
         curSteps = self.device.getSteps()
-        print "at {} steps, capn".format(curSteps)
         self.sigUpdateDegrees.emit(curSteps/self.stepsPerDeg)
 
     def setDegrees(self, val):

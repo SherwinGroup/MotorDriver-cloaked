@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\dvalovcin\Documents\GitHub\MotorDriver-cloaked\movementWindow.ui'
+# Form implementation generated from reading ui file 'C:\Users\dvalovcin\Documents\GitHub\MotorDriver-cloaked\motordriver\movementWindow.ui'
 #
-# Created: Thu Jun 04 11:19:07 2015
+# Created: Mon Jul 20 15:25:49 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -71,6 +71,21 @@ class Ui_MainWindow(object):
         self.bQuit.setObjectName(_fromUtf8("bQuit"))
         self.horizontalLayout.addWidget(self.bQuit)
         self.verticalLayout.addLayout(self.horizontalLayout)
+        self.horizontalLayout_3 = QtGui.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
+        self.labelCosCalc = QtGui.QLabel(self.centralwidget)
+        self.labelCosCalc.setObjectName(_fromUtf8("labelCosCalc"))
+        self.horizontalLayout_3.addWidget(self.labelCosCalc)
+        self.tCosCalc = QtGui.QLineEdit(self.centralwidget)
+        self.tCosCalc.setReadOnly(True)
+        self.tCosCalc.setObjectName(_fromUtf8("tCosCalc"))
+        self.horizontalLayout_3.addWidget(self.tCosCalc)
+        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_3.addItem(spacerItem2)
+        self.horizontalLayout_3.setStretch(0, 1)
+        self.horizontalLayout_3.setStretch(1, 1)
+        self.horizontalLayout_3.setStretch(2, 10)
+        self.verticalLayout.addLayout(self.horizontalLayout_3)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 593, 21))
@@ -103,6 +118,8 @@ class Ui_MainWindow(object):
         self.bStop.setText(_translate("MainWindow", "Stop", None))
         self.bGo.setText(_translate("MainWindow", "Go", None))
         self.bQuit.setText(_translate("MainWindow", "Quit", None))
+        self.labelCosCalc.setText(_translate("MainWindow", "TextLabel", None))
+        self.tCosCalc.setText(_translate("MainWindow", ".0321", None))
         self.menuMore.setTitle(_translate("MainWindow", "More", None))
         self.mMoreSettings.setText(_translate("MainWindow", "Control Panel", None))
         self.mMoreZero.setText(_translate("MainWindow", "Set Zero", None))

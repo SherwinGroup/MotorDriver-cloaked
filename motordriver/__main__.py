@@ -3,6 +3,7 @@ from movementWindow_ui import Ui_MainWindow
 from InstsAndQt.MotorDriver import *
 from InstsAndQt.customQt import *
 from Control import SettingsWindow
+import numpy as np
 import pyqtgraph
 
 
@@ -53,6 +54,8 @@ class MotorWindow(QtGui.QMainWindow):
         self.ui.mMoreZero.triggered.connect(self.zeroDegrees)
 
         self.ui.bQuit.clicked.connect(self.close)
+
+        self.ui.labelCosCalc.setText(u"cos<sup>4</sup>(\u03B8)")
 
         self.show()
 
@@ -118,6 +121,10 @@ class MotorWindow(QtGui.QMainWindow):
     def setDegrees(self, val):
         self.ui.sbAngle.setValue(val)
         self.currentAngle = val
+        cos = np.cos(np.deg2rad(val))**4
+        self.ui.tCosCalc.setText("{:0.4f}".format(cos))
+
+
 
 
 

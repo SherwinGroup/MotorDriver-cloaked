@@ -22,7 +22,7 @@ class MotorWindow(QtGui.QMainWindow):
         self.currentAngle = self.device.getSteps()/self.stepsPerDeg
         self.currentLimit = self.device.getCurrentLimit()
         if self.currentLimit == 0:
-            self.currentLimit = 18
+            self.currentLimit = 25
         self.device.setCurrentLimit(0)
         self.device.setSteppingMode(toHalf=True)
         self.settingsWindow = None
@@ -66,7 +66,6 @@ class MotorWindow(QtGui.QMainWindow):
             moveBy = int(sent.text()[:-1])
         else:
             moveBy = self.ui.sbAngle.interpret() - self.currentAngle
-        print moveBy
 
 
         for button in self.buttons:

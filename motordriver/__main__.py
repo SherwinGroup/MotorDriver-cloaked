@@ -15,10 +15,19 @@ class MotorWindow(QtGui.QMainWindow):
 
     def __init__(self, device = None, parent = None):
         super(MotorWindow, self).__init__(parent)
-        self.stepsPerDeg = 28.43
+        self.stepsPerDeg = 23.71
         self.device = TIMS0201()
         self.device.open_()
         self.initUI()
+        
+        # To calibrate:
+        # 	Set stepsPerDeg to 1
+        #   Uncomment lines below removing bounds on sbAngle
+        #   move some number of steps to move 360 deg
+        #   (on the order of 10,000)
+        # self.stepsPerDeg = 1
+        # self.ui.sbAngle.setOpts(bounds = (-1e7, 1e7), decimals = 1, step = 1)
+        
         self.currentAngle = self.device.getSteps()/self.stepsPerDeg
         self.currentLimit = self.device.getCurrentLimit()
         if self.currentLimit == 0:

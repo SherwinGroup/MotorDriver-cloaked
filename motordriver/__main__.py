@@ -16,19 +16,22 @@ class MotorWindow(QtGui.QMainWindow):
     def __init__(self, device = None, parent = None):
         super(MotorWindow, self).__init__(parent)
         self.stepsPerDeg = 28.43
-        self.device = TIMS0201()
-        self.device.open_()
-        self.initUI()
-        self.currentAngle = self.device.getSteps()/self.stepsPerDeg
-        self.currentLimit = self.device.getCurrentLimit()
-        if self.currentLimit == 0:
-            self.currentLimit = 18
-        self.device.setCurrentLimit(0)
-        self.device.setSteppingMode(toHalf=True)
-        self.settingsWindow = None
-        self.sigUpdateDegrees.connect(self.setDegrees)
+        try:
+            self.device = TIMS0201()
+            self.device.open_()
+            self.currentAngle = self.device.getSteps()/self.stepsPerDeg
+            self.currentLimit = self.device.getCurrentLimit()
+            if self.currentLimit == 0:
+                self.currentLimit = 18
+            self.device.setCurrentLimit(0)
+            self.device.setSteppingMode(toHalf=True)
+            self.settingsWindow = None
+            self.sigUpdateDegrees.connect(self.setDegrees)
 
-        self.finishedMove()
+            self.finishedMove()
+        except WindowsError:
+            log.critical("Cannot open motor driver (No driver?)")
+        self.initUI()
 
 
     def initUI(self):

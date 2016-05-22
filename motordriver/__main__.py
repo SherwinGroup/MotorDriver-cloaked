@@ -16,23 +16,9 @@ class MotorWindow(QtGui.QMainWindow):
     def __init__(self, device = None, parent = None):
         super(MotorWindow, self).__init__(parent)
         self.stepsPerDeg = 23.71
-        try:
-            self.device = TIMS0201()
-            self.device.open_()
-            self.currentAngle = self.device.getSteps()/self.stepsPerDeg
-            self.currentLimit = self.device.getCurrentLimit()
-            if self.currentLimit == 0:
-                self.currentLimit = 25
-            self.device.setCurrentLimit(0)
-            self.device.setSteppingMode(toHalf=True)
-            self.settingsWindow = None
-            self.sigUpdateDegrees.connect(self.setDegrees)
-
-            self.finishedMove()
-        except WindowsError:
-            log.critical("Cannot open motor driver (No driver?)")
         self.initUI()
-
+        self.device = None
+        self.openDevice()
 
 
     def initUI(self):
@@ -61,7 +47,55 @@ class MotorWindow(QtGui.QMainWindow):
 
         self.ui.labelCosCalc.setText(u"cos<sup>4</sup>(\u03B8)")
 
+        self.ui.bCloseDevice.clicked.connect(self.toggleDeviceOpen)
+
         self.show()
+
+    def openDevice(self):
+        try:
+            self.device = TIMS0201()
+            self.device.open_()
+            self.currentAngle = self.device.getSteps()/self.stepsPerDeg
+            self.currentLimit = self.device.getCurrentLimit()
+            if self.currentLimit == 0:
+                self.currentLimit = 25
+            self.device.setCurrentLimit(0)
+            self.device.setSteppingMode(toHalf=True)
+            self.settingsWindow = None
+            self.sigUpdateDegrees.connect(self.setDegrees)
+
+            self.finishedMove()
+        except Exception as e:
+            log.critical("Cannot open motor driver (No driver?)")
+        else:
+            self.toggleUIEnabled(True)
+            self.ui.bCloseDevice.blockSignals(True)
+            self.ui.bCloseDevice.setChecked(True)
+            self.ui.bCloseDevice.blockSignals(False)
+
+    def closeDevice(self):
+        try:
+            self.device.close_()
+        except Exception as e:
+            print "error closing", e
+        self.device = None
+        self.toggleUIEnabled(False)
+        self.ui.bCloseDevice.blockSignals(True)
+        self.ui.bCloseDevice.setChecked(False)
+        self.ui.bCloseDevice.blockSignals(False)
+
+    def toggleDeviceOpen(self):
+        if self.device is None:
+            self.openDevice()
+        else:
+            self.closeDevice()
+
+    def toggleUIEnabled(self, state=True):
+        [i.setEnabled(state) for i in self.buttons]
+        self.ui.sbAngle.setEnabled(state)
+        self.ui.bStop.setEnabled(state)
+
+
 
     def moveMotorDeg(self):
         sent = self.sender()
@@ -101,8 +135,6 @@ class MotorWindow(QtGui.QMainWindow):
         self.device.setSteps(0)
         self.finishedMove()
 
-
-
     def waitForMotor(self):
         flg = self.device.isBusy()
         while flg:
@@ -126,13 +158,6 @@ class MotorWindow(QtGui.QMainWindow):
         self.currentAngle = val
         cos = np.cos(np.deg2rad(val))**4
         self.ui.tCosCalc.setText("{:0.4f}".format(cos))
-
-
-
-
-
-
-
 
 
     def closeEvent(self, QCloseEvent):

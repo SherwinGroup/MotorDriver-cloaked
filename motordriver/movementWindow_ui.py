@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\dvalovcin\Documents\GitHub\MotorDriver-cloaked\motordriver\movementWindow.ui'
+# Form implementation generated from reading ui file 'movementWindow.ui'
 #
-# Created: Mon Jul 20 15:25:49 2015
-#      by: PyQt4 UI code generator 4.10.4
+# Created: Sat May 21 15:36:43 2016
+#      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(593, 251)
+        MainWindow.resize(593, 187)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.centralwidget)
@@ -82,13 +82,18 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.addWidget(self.tCosCalc)
         spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem2)
+        self.bCloseDevice = QtGui.QPushButton(self.centralwidget)
+        self.bCloseDevice.setCheckable(True)
+        self.bCloseDevice.setObjectName(_fromUtf8("bCloseDevice"))
+        self.horizontalLayout_3.addWidget(self.bCloseDevice)
         self.horizontalLayout_3.setStretch(0, 1)
-        self.horizontalLayout_3.setStretch(1, 1)
+        self.horizontalLayout_3.setStretch(1, 2)
         self.horizontalLayout_3.setStretch(2, 10)
+        self.horizontalLayout_3.setStretch(3, 1)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 593, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 593, 22))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuMore = QtGui.QMenu(self.menubar)
         self.menuMore.setObjectName(_fromUtf8("menuMore"))
@@ -119,7 +124,8 @@ class Ui_MainWindow(object):
         self.bGo.setText(_translate("MainWindow", "Go", None))
         self.bQuit.setText(_translate("MainWindow", "Quit", None))
         self.labelCosCalc.setText(_translate("MainWindow", "TextLabel", None))
-        self.tCosCalc.setText(_translate("MainWindow", ".0321", None))
+        self.tCosCalc.setText(_translate("MainWindow", "0.0", None))
+        self.bCloseDevice.setText(_translate("MainWindow", "Open Device", None))
         self.menuMore.setTitle(_translate("MainWindow", "More", None))
         self.mMoreSettings.setText(_translate("MainWindow", "Control Panel", None))
         self.mMoreZero.setText(_translate("MainWindow", "Set Zero", None))

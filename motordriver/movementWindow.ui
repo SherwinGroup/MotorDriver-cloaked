@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>593</width>
-    <height>251</height>
+    <height>187</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -116,7 +116,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1,10">
+     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,2,10,1">
       <item>
        <widget class="QLabel" name="labelCosCalc">
         <property name="text">
@@ -127,7 +127,7 @@
       <item>
        <widget class="QLineEdit" name="tCosCalc">
         <property name="text">
-         <string>.0321</string>
+         <string>0.0</string>
         </property>
         <property name="readOnly">
          <bool>true</bool>
@@ -147,6 +147,16 @@
         </property>
        </spacer>
       </item>
+      <item>
+       <widget class="QPushButton" name="bCloseDevice">
+        <property name="text">
+         <string>Open Device</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -157,7 +167,7 @@
      <x>0</x>
      <y>0</y>
      <width>593</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMore">

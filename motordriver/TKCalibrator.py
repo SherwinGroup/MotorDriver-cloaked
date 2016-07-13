@@ -2,6 +2,7 @@ from scopeCollect import Win as ScopeViewWidget
 from motorMain import MotorWindow
 from PyQt4 import QtGui, QtCore
 from InstsAndQt.customQt import TempThread
+from InstsAndQt.TKOscope.TKWid import TKWid
 import time
 import numpy as np
 import glob
@@ -129,7 +130,9 @@ class TKCalibrator(QtGui.QMainWindow):
         self.ui = UI()
         layout = QtGui.QVBoxLayout()
         self.motorWid = MotorWindow()
-        self.scopeWid = ScopeViewWidget()
+        self.scopeWid = TKWid()
+        # only emit signal when completed.
+        self.scopeWid.settings["emit_mid_average"] = False
         layout.addWidget(self.motorWid)
         layout.addWidget(self.scopeWid)
 
@@ -151,20 +154,15 @@ class TKCalibrator(QtGui.QMainWindow):
         wid.setLayout(layout)
         self.setCentralWidget(wid)
 
-        self.scopeWid.ui.cbSettingsCH3.setChecked(True)
-        self.scopeWid.ui.tSettingsCH1.setText("TK")
-        self.scopeWid.ui.tSettingsCH3.setText("Pyro")
-
         self.thDoTKSweep.target = self.doTKSweep
         self.sigDoGui.connect(self.makeGuiThings)
 
 
         self.settings = {
-            "saveDir": '',
-            "numAve": 8,
-            "thzSweepPoints": [],
+            "saveDir": r'Z:\Hunter Banks\Data\2016',
+            "thzSweepPoints": [0,15,25,32,35,39,44,50,54,58,60,63,68],
+            "thzSweepPointsIter": iter([]),
             "saveData": [],
-            "thzFreq": 540
         }
 
 
@@ -194,8 +192,14 @@ class TKCalibrator(QtGui.QMainWindow):
         if not ok:
             return
         self.settings["thzSweepPoints"] = [float(i) for i in st.split(',')]
+        self.settings["thzSweepPointsIter"] = iter(self.settings["thzSweepPoints"])
         self.settings["saveData"] = []
-        self.thDoTKSweep.start()
+        self.motorWid.moveMotorDeg(next(self.settings["thzSweepPointsIter"]))
+        # for it to restart counting
+        self.scopeWid.updateAveSize()
+        # self.thDoTKSweep.start()
+        self.scopeWid.sigPulseEnergy.connect(self.addSweepPoint)
+
 
     def doTKSweep(self):
         for angle in self.settings["thzSweepPoints"]:
@@ -230,64 +234,36 @@ class TKCalibrator(QtGui.QMainWindow):
         )
         self.saveData()
 
-    def processTKWaveform(self, data):
-        # import matplotlib.pylab as plt
-
-        # plt.plot(data)
-        minSt, minEn = np.argmin(data[:]) + np.array([-200, 350])
-
-
-        maxSt, maxEn = np.argmax(data[minEn:]) + minEn + np.array([-750, 750])
-
-
-        x1 = np.arange(minSt,minEn)
-        x2 = np.arange(maxSt,maxEn)
+    def addSweepPoint(self, energy):
+        self.scopeWid.sigPulseEnergy.disconnect(self.addSweepPoint)
+        self.settings["saveData"].append([self.motorWid.currentAngle, energy])
+        self.statusBar().showMessage("At {:.2f}, measured {:.3f}".format(*self.settings["saveData"][-1]), 3000)
+        print "At {:.2f}, measured {:.3f}".format(*self.settings["saveData"][-1])
         try:
-            p1 = np.polyfit(x1, data[minSt:minEn], 3)
-            p2 = np.polyfit(x2, data[maxSt:maxEn], 2)
-        except TypeError:
+            # Move the motor. Force an exit if the button was unchecked
+            if not self.ui.bStartSweep.isChecked(): raise StopIteration
+            self.motorWid.moveMotorDeg(next(self.settings["thzSweepPointsIter"]))
+            self.motorWid.thMoveMotor.wait()
+            if not self.ui.bStartSweep.isChecked(): raise StopIteration
+        except StopIteration:
+            self.ui.bStartSweep.setChecked(False)
             self.saveData()
-            np.savetxt(os.path.join(self.settings["saveData"], "BadScan.txt"),
-                data)
-            print "x1:", x1
-            print "min range", minSt, minEn
-            print len(x1), minEn-minSt
-            print
-            print "x2:", x2
-            print "max range", maxSt, maxEn
-            print len(x2), maxEn-maxSt
-            raise
-
-
-        
-
-        y1 = np.polyval(p1, x1)
-        y2 = np.polyval(p2, x2)
-
-        # plt.plot(x1, y1)
-        # plt.plot(x2, y2)
-        # plt.show()
-
-        return np.max(y2) - np.min(y1)
+            return
+        # reset averaging so it's all taken after the motor moved
+        self.scopeWid.updateAveSize()
+        self.scopeWid.sigPulseEnergy.connect(self.addSweepPoint)
 
     def saveData(self):
         data = np.array(self.settings["saveData"])
-        # convert mV to mJ
-        T = tkTrans(self.settings["thzFreq"])
-        energy = data[:,1] / (0.49 * T) * tkCalFactor
 
         f = self.settings["saveDir"].split('.txt')[0]
-        num = len([ii for ii in glob.glob(f) if os.path.isfile(ii)])
+        num = len([ii for ii in glob.glob(f+"*") if os.path.isfile(ii)])
         print "found {} files".format(num)
         f += "{}.txt".format(num)
 
-        data = np.column_stack((data, energy))
-
-
-
-
-        oh = "#Freq: {}\nAngle,TK,TK\ndeg,mV,mJ\nAngle,TK,TK".format(self.settings["thzFreq"])
-        np.savetxt(f, data, fmt="%.6e", delimiter=',', header=oh, comments='')
+        oh = "#Freq: {}\nAngle,TK\ndeg,mJ\nAngle,TK".format(
+            self.scopeWid.ui.tFELFreq.value()*29.9792)
+        np.savetxt(f, data, fmt="%f", delimiter=',', header=oh, comments='')
 
     def makeGuiThings(self, func, args):
         if args is None:

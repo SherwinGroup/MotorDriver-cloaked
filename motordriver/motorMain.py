@@ -97,13 +97,15 @@ class MotorWindow(QtGui.QMainWindow):
 
 
 
-    def moveMotorDeg(self):
-        sent = self.sender()
-        moveBy = 0
-        if sent in self.buttons[:-1]:
-            moveBy = int(sent.text()[:-1])
+    def moveMotorDeg(self, moveTo=False):
+        if isinstance(moveTo, float):
+            moveBy = moveTo - self.currentAngle
         else:
-            moveBy = self.ui.sbAngle.interpret() - self.currentAngle
+            sent = self.sender()
+            if sent in self.buttons[:-1]:
+                moveBy = int(sent.text()[:-1])
+            else:
+                moveBy = self.ui.sbAngle.interpret() - self.currentAngle
 
 
         for button in self.buttons:

@@ -145,6 +145,9 @@ class TKCalibrator(QtGui.QMainWindow):
 
         wid = QtGui.QWidget()
         layout.addLayout(buttons)
+        layout.setStretch(0,1)
+        layout.setStretch(1,10)
+        layout.setStretch(2,1)
         wid.setLayout(layout)
         self.setCentralWidget(wid)
 
@@ -158,10 +161,10 @@ class TKCalibrator(QtGui.QMainWindow):
 
         self.settings = {
             "saveDir": '',
-            "numAve": 4,
+            "numAve": 8,
             "thzSweepPoints": [],
             "saveData": [],
-            "thzFreq": 435
+            "thzFreq": 540
         }
 
 
@@ -228,18 +231,44 @@ class TKCalibrator(QtGui.QMainWindow):
         self.saveData()
 
     def processTKWaveform(self, data):
+        # import matplotlib.pylab as plt
+
+        # plt.plot(data)
         minSt, minEn = np.argmin(data[:]) + np.array([-200, 350])
+
 
         maxSt, maxEn = np.argmax(data[minEn:]) + minEn + np.array([-750, 750])
 
-        p1 = np.polyfit(data[minSt:minEn], data[minSt:minEn], 3)
-        p2 = np.polyfit(data[maxSt:maxEn], data[maxSt:maxEn], 2)
 
-        x1 = data[minSt:minEn]
-        x2 = data[maxSt:maxEn]
+        x1 = np.arange(minSt,minEn)
+        x2 = np.arange(maxSt,maxEn)
+        try:
+            p1 = np.polyfit(x1, data[minSt:minEn], 3)
+            p2 = np.polyfit(x2, data[maxSt:maxEn], 2)
+        except TypeError:
+            self.saveData()
+            np.savetxt(os.path.join(self.settings["saveData"], "BadScan.txt"),
+                data)
+            print "x1:", x1
+            print "min range", minSt, minEn
+            print len(x1), minEn-minSt
+            print
+            print "x2:", x2
+            print "max range", maxSt, maxEn
+            print len(x2), maxEn-maxSt
+            raise
+
+
+        
+
         y1 = np.polyval(p1, x1)
         y2 = np.polyval(p2, x2)
-        return np.max(y1) - np.min(y2)
+
+        # plt.plot(x1, y1)
+        # plt.plot(x2, y2)
+        # plt.show()
+
+        return np.max(y2) - np.min(y1)
 
     def saveData(self):
         data = np.array(self.settings["saveData"])

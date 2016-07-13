@@ -298,7 +298,7 @@ class Win(QtGui.QMainWindow):
             )
             self.ui.cSettingsGPIB.currentIndexChanged.connect(self.openAgilent)
 
-        self.Agilent.setTrigger(source = "EXT")
+        self.Agilent.setTrigger(source = 4)
         self.settings['shouldScopeLoop'] = True
         if isPaused:
             self.toggleScopePause(True)

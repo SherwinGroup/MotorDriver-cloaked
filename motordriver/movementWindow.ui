@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>593</width>
-    <height>187</height>
+    <height>146</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -125,7 +125,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="tCosCalc">
+       <widget class="QFNumberEdit" name="tCosCalc">
         <property name="text">
          <string>0.0</string>
         </property>
@@ -167,7 +167,7 @@
      <x>0</x>
      <y>0</y>
      <width>593</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMore">
@@ -192,6 +192,11 @@
   </action>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>QFNumberEdit</class>
+   <extends>QLineEdit</extends>
+   <header>InstsAndQt.customQt</header>
+  </customwidget>
   <customwidget>
    <class>SpinBox</class>
    <extends>QSpinBox</extends>

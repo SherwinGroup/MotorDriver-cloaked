@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'movementWindow.ui'
+# Form implementation generated from reading ui file 'C:\Users\dvalovcin\Documents\GitHub\MotorDriver-cloaked\motordriver\movementWindow.ui'
 #
-# Created: Sat May 21 15:36:43 2016
-#      by: PyQt4 UI code generator 4.11.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,7 +25,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(593, 187)
+        MainWindow.resize(593, 146)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.centralwidget)
@@ -76,7 +75,7 @@ class Ui_MainWindow(object):
         self.labelCosCalc = QtGui.QLabel(self.centralwidget)
         self.labelCosCalc.setObjectName(_fromUtf8("labelCosCalc"))
         self.horizontalLayout_3.addWidget(self.labelCosCalc)
-        self.tCosCalc = QtGui.QLineEdit(self.centralwidget)
+        self.tCosCalc = QFNumberEdit(self.centralwidget)
         self.tCosCalc.setReadOnly(True)
         self.tCosCalc.setObjectName(_fromUtf8("tCosCalc"))
         self.horizontalLayout_3.addWidget(self.tCosCalc)
@@ -93,7 +92,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 593, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 593, 21))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuMore = QtGui.QMenu(self.menubar)
         self.menuMore.setObjectName(_fromUtf8("menuMore"))
@@ -130,4 +129,5 @@ class Ui_MainWindow(object):
         self.mMoreSettings.setText(_translate("MainWindow", "Control Panel", None))
         self.mMoreZero.setText(_translate("MainWindow", "Set Zero", None))
 
+from InstsAndQt.customQt import QFNumberEdit
 from pyqtgraph import SpinBox

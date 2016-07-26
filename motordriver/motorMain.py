@@ -21,6 +21,10 @@ class MotorWindow(QtGui.QMainWindow):
         self.openDevice()
 
 
+        self.ui.tFitA.editingFinished.connect(self.calcTransmission)
+        self.ui.tFitMu.editingFinished.connect(self.calcTransmission)
+        self.ui.tFitC.editingFinished.connect(self.calcTransmission)
+
     def initUI(self):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -44,8 +48,6 @@ class MotorWindow(QtGui.QMainWindow):
         self.ui.mMoreZero.triggered.connect(self.zeroDegrees)
 
         self.ui.bQuit.clicked.connect(self.close)
-
-        self.ui.labelCosCalc.setText(u"cos<sup>4</sup>(\u03B8)")
 
         self.ui.bCloseDevice.clicked.connect(self.toggleDeviceOpen)
 
@@ -95,8 +97,6 @@ class MotorWindow(QtGui.QMainWindow):
         self.ui.sbAngle.setEnabled(state)
         self.ui.bStop.setEnabled(state)
 
-
-
     def moveMotorDeg(self, moveTo=False):
         if isinstance(moveTo, float):
             moveBy = moveTo - self.currentAngle
@@ -131,7 +131,6 @@ class MotorWindow(QtGui.QMainWindow):
         self.device.setCurrentLimit(self.currentLimit)
         self.settingsWindow = SettingsWindow(device = self.device, parent = self)
 
-
     def zeroDegrees(self):
         val = self.ui.sbAngle.interpret()
         self.device.setSteps(0)
@@ -158,8 +157,16 @@ class MotorWindow(QtGui.QMainWindow):
     def setDegrees(self, val):
         self.ui.sbAngle.setValue(val)
         self.currentAngle = val
-        cos = np.cos(np.deg2rad(val))**4
+        self.calcTransmission()
+
+    def calcTransmission(self):
+        val = self.currentAngle
+        A, mu, c = self.ui.tFitA.value(), self.ui.tFitMu.value(), self.ui.tFitC.value()
+
+        cos = A*np.cos(np.deg2rad(val+mu))**4 + c
         self.ui.tCosCalc.setText("{:0.4f}".format(cos))
+
+
 
 
     def closeEvent(self, QCloseEvent):

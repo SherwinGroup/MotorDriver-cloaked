@@ -8,6 +8,8 @@ import numpy as np
 import glob
 import os
 from scipy.interpolate import interp1d as i1d
+from scipy.optimize import curve_fit as cf
+import pyqtgraph as pg
 
 tkTrans = np.array(
     [
@@ -115,6 +117,11 @@ tkTrans = np.array(
 )
 tkTrans = i1d(tkTrans[:,0], tkTrans[:,1])
 
+
+def minir(x, *p):
+    A, mu, c = p
+    return A*np.cos(np.deg2rad(x+mu))**4+c
+
 tkCalFactor = 0.00502
 
 class UI(object): pass
@@ -131,6 +138,14 @@ class TKCalibrator(QtGui.QMainWindow):
         layout = QtGui.QVBoxLayout()
         self.motorWid = MotorWindow()
         self.scopeWid = TKWid()
+
+        self.ui.fitWid = pg.PlotWidget()
+        self.curveData = self.ui.fitWid.plotItem.plot(pen=None, symbol='o', brush='k')
+        self.curveFit = self.ui.fitWid.plotItem.plot(pen='k')
+        self.textFit = pg.TextItem()
+        self.textFit.setFont(QtGui.QFont("", 15))
+        self.ui.fitWid.plotItem.addItem(self.textFit)
+        self.scopeWid.ui.tabWidget.addTab(self.ui.fitWid, "Cos Fit")
         # only emit signal when completed.
         self.scopeWid.settings["emit_mid_average"] = False
         layout.addWidget(self.motorWid)
@@ -165,13 +180,7 @@ class TKCalibrator(QtGui.QMainWindow):
             "saveData": [],
         }
 
-
-
-
-
-
         self.show()
-
 
     def pickSaveDir(self):
         path = QtGui.QFileDialog.getSaveFileName(self,
@@ -199,7 +208,6 @@ class TKCalibrator(QtGui.QMainWindow):
         self.scopeWid.updateAveSize()
         # self.thDoTKSweep.start()
         self.scopeWid.sigPulseEnergy.connect(self.addSweepPoint)
-
 
     def doTKSweep(self):
         for angle in self.settings["thzSweepPoints"]:
@@ -239,6 +247,7 @@ class TKCalibrator(QtGui.QMainWindow):
         self.settings["saveData"].append([self.motorWid.currentAngle, energy])
         self.statusBar().showMessage("At {:.2f}, measured {:.3f}".format(*self.settings["saveData"][-1]), 3000)
         print "At {:.2f}, measured {:.3f}".format(*self.settings["saveData"][-1])
+        self.updateFit()
         try:
             # Move the motor. Force an exit if the button was unchecked
             if not self.ui.bStartSweep.isChecked(): raise StopIteration
@@ -264,6 +273,27 @@ class TKCalibrator(QtGui.QMainWindow):
         oh = "#Freq: {}\nAngle,TK\ndeg,mJ\nAngle,TK".format(
             self.scopeWid.ui.tFELFreq.value()*29.9792)
         np.savetxt(f, data, fmt="%f", delimiter=',', header=oh, comments='')
+
+    def updateFit(self):
+        data = np.array(self.settings["saveData"])
+        fitX = data[:,0]
+        fitY = data[:,1]
+        fitY = fitY/fitY.max()
+
+        self.curveData.setData(fitX, fitY)
+        try:
+            p, pcov = cf(minir, fitX, fitY, p0=[22, 5, 0.1])
+        except TypeError:
+            return
+
+        angles = np.linspace(0, 90, 500)
+        fit = minir(angles, *p)
+        self.curveFit.setData(angles, fit)
+
+        self.textFit.setText(
+            "A={:.3f}, mu=\n {:.3f}, c={:.3f}".format(*p), color=(0,0,0)
+        )
+
 
     def makeGuiThings(self, func, args):
         if args is None:

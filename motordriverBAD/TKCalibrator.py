@@ -174,7 +174,7 @@ class TKCalibrator(QtGui.QMainWindow):
 
 
         self.settings = {
-            "saveDir": r'Z:\Hunter Banks\Data\2016',
+            "saveDir": r'Z:\~Hunter Banks\Data\2017',
             "thzSweepPoints": [0,15,25,32,35,39,44,50,54,58,60,63,68],
             "thzSweepPointsIter": iter([]),
             "saveData": [],
@@ -300,6 +300,14 @@ class TKCalibrator(QtGui.QMainWindow):
             func()
         else:
             func(args)
+
+    def closeEvent(self, ev):
+        self.scopeWid.toggleScopePause(False)
+        self.scopeWid.settings['shouldScopeLoop'] = False
+        try:
+            self.scopeWid.scopeCollectionThread.join()
+        except Exception as e:
+            print "couldn't join", e
 
 
 
